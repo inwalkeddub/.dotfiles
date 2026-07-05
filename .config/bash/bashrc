@@ -110,3 +110,4 @@ export NVM_DIR="$HOME/.nvm"
 # RUST
 export PATH="$HOME/.cargo/bin:$PATH"
 
+export LEDGER_FILE=/Volumes/budpowell/accounting/2024.journal

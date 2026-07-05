@@ -48,3 +48,23 @@
 ;(unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;(unpin! t)
+
+;; /Volumes/dev/clojure/doom-emacs-config/packages.el practical.li
+;; Use the latest available packages for Clojure
+;; - cider, clojure-mode
+(unpin! (:lang clojure))
+
+;; Koacha test runner in Emacs
+(package! kaocha-runner)
+
+;; Keycast
+;; latest release 2020-11-17
+(package! keycast :pin "16d9961d15536054632be1eff75fd0fb1a4420f8")
+
+;; https://edmundmiller.dev/posts/emacs-astro/
+(package! treesit-auto)
+(package! astro-ts-mode)
+
+(when (modulep! +lsp)
+  (package! lsp-tailwindcss
+    :recipe (:host github :repo "merrickluo/lsp-tailwindcss")))

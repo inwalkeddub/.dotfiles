@@ -16,6 +16,7 @@
    excludesfile = ${XDG_CONFIG_HOME}/git/ignore
    editor = vim
    whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
+	pager = diff-so-fancy | less --tabs=4 -RF
 
 [diff]
    tool     = vimdiff
@@ -63,19 +64,27 @@
    dump = cat-file -p
    type = cat-file -t
 	aliases = config --get-regexp ^alias\\.
+	dsf = diff --color
 
 [branch]
 	autoSetupMerge = always
 
 [color]
-   ui = true
+	ui = true       # from diff-so-fancy
    pager = true
    diff = auto
    status = auto
    branch = auto
 
 [color "diff"]
-   whitespace = red reverse
+    # from diff-so-fancy
+	whitespace = red reverse
+	meta = 11
+	frag = magenta bold
+	func = 146 bold
+	commit = yellow bold
+	old = red bold
+	new = green bold
 
 [color "status"]
    added = yellow
@@ -102,3 +111,21 @@
    cmd = opendiff \"$LOCAL\" \"$REMOTE\"
    path = 
 
+[pager]
+	dsf = diff-so-fancy | less --tabs=4 -RFXS
+
+[interactive]
+	diffFilter = diff-so-fancy --patch
+
+[color "diff-highlight"]
+    # from diff-so-fancy
+	oldNormal = red bold
+	oldHighlight = red bold 52
+	newNormal = green bold
+	newHighlight = green bold 22
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/local/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/local/bin/gh auth git-credential

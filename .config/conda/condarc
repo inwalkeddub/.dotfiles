@@ -1,4 +1,11 @@
 channels:
   - conda-forge
   - defaults
+
 channel_priority: strict
+
+# https://ericmjl.github.io/data-science-bootstrap-notes/configure-your-machine/
+
+auto_update_conda: True
+
+always_yes: True

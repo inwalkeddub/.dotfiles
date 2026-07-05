@@ -16,4 +16,7 @@ export GRADLE_USER_HOME="$XDG_DATA_HOME"/gradle
 
 export LESSHISTFILE="$XDG_STATE_HOME/less/history"
 
-export EDITOR='vim'
+# -t: open a frame in the current terminal; -a '': start an Emacs daemon
+# if no server is running, so this works even when Emacs isn't already up.
+export EDITOR="emacsclient -t -a ''"
+export VISUAL="$EDITOR"

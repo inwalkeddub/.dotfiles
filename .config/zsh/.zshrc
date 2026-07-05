@@ -9,25 +9,9 @@ source ${ZDOTDIR}/antigen.zsh
 
 antigen bundle zsh-users/zsh-syntax-highlighting
 
-antigen theme romkatv/powerlevel10k
+antigen theme romkatv/powerlevel10k  # also enables vi mode (bindkey -v) — add explicitly if removing p10k
 
 antigen apply
-
-autoload -U compinit; compinit
-
-# https://thevaluable.dev/zsh-completion-guide-examples/
-# ^x h for completion help
-zstyle ':completion:*' completer _extensions _complete _approximate
-zstyle ':completion:*' use-cache on
-zstyle ':completion:*' cache-path "$XDG_CACHE_HOME/zsh/.zcompcache"
-zstyle ':completion:*' menu select                                                  # search for fuzzy-search ; interactive to filter completion menu
-zstyle ':completion:*:*:*:*:descriptions' format '%F{green}-- %d --%f'              # descriptions depending on the type of match
-zstyle ':completion:*:*:*:*:corrections' format '%F{yellow}!- %d (errors: %e) -!%f' # for completer _approximate
-zstyle ':completion:*:messages' format ' %F{purple} -- %d --%f'
-zstyle ':completion:*:warnings' format ' %F{red}-- no matches found --%f'
-zstyle ':completion:*' group-name ''                                                # group different match types under their descriptions
-zstyle ':completion:*:*:-command-:*:*' group-order alias builtins functions commands    # order of match type descriptions
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}                       # set value to $LS_COLORS, normally used by 'ls --color=auto'
 
 zmodload zsh/complist
 bindkey -M menuselect 'h' vi-backward-char
@@ -35,10 +19,39 @@ bindkey -M menuselect 'k' vi-up-line-or-history
 bindkey -M menuselect 'l' vi-forward-char
 bindkey -M menuselect 'j' vi-down-line-or-history
 
+
+autoload -U compinit; compinit
+
+# https://thevaluable.dev/zsh-completion-guide-examples/
+# ^x h for completion help
+zstyle ':completion:*' completer _extensions _complete _approximate                 # ^x^a expands aliases
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "$XDG_CACHE_HOME/zsh/.zcompcache"
+zstyle ':completion:*' menu select                                                  # search for fuzzy-search ; interactive to filter completion menu
+zstyle ':completion:*:*:*:*:descriptions' format '%F{green}-- %d --%f'              # color descriptions for the match types
+zstyle ':completion:*:*:*:*:corrections' format '%F{yellow}!- %d (errors: %e) -!%f' # color corrections for completer _approximate
+zstyle ':completion:*:messages' format ' %F{purple} -- %d --%f'
+zstyle ':completion:*:warnings' format ' %F{red}-- no matches found --%f'
+zstyle ':completion:*' group-name ''                                                # group different match types under their descriptions
+zstyle ':completion:*:*:-command-:*:*' group-order alias builtins functions commands    # order of match type descriptions
+zstyle ':completion:*' file-list all                                                # ls -l details
+zstyle ':completion:*' file-sort modification                                       # sort by modification date
+
+zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}                       # NOT WORKING; tried: gdircolors -p > ~/.dircolors ; eval "$(gdircolors -b .dircolors)"
+                                                                                    # sets $LS_COLORS, used by gnu coreutils 'ls --color=auto'
+alias ls="/usr/local/opt/coreutils/libexec/gnubin/ls --color=auto"                  # not pulling in all of gnu coreutils
+
 # https://unix.stackexchange.com/questions/6620/how-to-edit-command-line-in-full-screen-editor-in-zsh
 autoload -z edit-command-line
 zle -N edit-command-line
 bindkey "^X^E" edit-command-line
+
+# Bash-style kill/yank in vi insert mode (kill ring carries text across keystrokes)
+# ^U cut-to-start, ^K cut-to-end, ^Y yank most recent, Alt-Y cycle older yanks
+bindkey -M viins '^U' backward-kill-line
+bindkey -M viins '^K' kill-line
+bindkey -M viins '^Y' yank
+bindkey -M viins '^[y' yank-pop
 
 
 [ -f ${ZDOTDIR}/.fzf.zsh ] && source ${ZDOTDIR}/.fzf.zsh
@@ -50,11 +63,19 @@ _fzf_compgen_path() {
 _fzf_compgen_dir() {
   fd --type d --hidden --follow --exclude ".git" . "$1"
 }
+export FZF_DEFAULT_OPTS="--tmux right,70%,90%"
+export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
 # --hidden to search dotfiles
-export FZF_DEFAULT_COMMAND='fd --type f --hidden --strip-cwd-prefix'
+# --follow symbolic links
+# --exclude .git respects .gitignore
+# export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 export BAT_THEME="ansi"
+alias cat=bat
+function xcat () { BAT_PAGER="less -RFKX" cat "$@" }  # -X prevents screen clear on exit, -F skips paging if output fits
+
+export LEDGER_FILE=/Volumes/budpowell/accounting/2024.journal
 
 HISTFILE="$XDG_STATE_HOME/zsh/history"
 HISTSIZE=50000
@@ -87,7 +108,7 @@ function less () {      # https://zsh.sourceforge.io/Guide/zshguide05.html
                 ;;
             (*.(gz|Z))  args[$i]="=(zcat ${(q)arg})"        # assumes zcat is the one installed with gzip
                 ;;
-            (*)         args=${(q)arg}
+            (*)         args[$i]=${(q)arg}
                 ;;
         esac
         (( i++ ))
@@ -96,9 +117,16 @@ function less () {      # https://zsh.sourceforge.io/Guide/zshguide05.html
     eval command ${PAGER:-less} $args
 }
 
+function fkill () {
+    (date; ps -ef) |
+      fzf --bind='ctrl-r:reload(date; ps -ef)' \
+          --header=$'Press CTRL-R to reload\n\n' --header-lines=2 \
+          --preview='echo {}' --preview-window=down,3,wrap \
+          --layout=reverse --height=80% | awk '{print $2}' | xargs kill -9
+}
+
 fignore+=(.DS_Store)
 
-alias cat=bat
 alias his="history -20"
 alias more="less -i"
 
@@ -150,7 +178,17 @@ if [ "$JAVA_HOME" = "" ]; then
     export JAVA_HOME
 fi
 
-path=($path $HOME/.emacs.d/bin $HOME/bin)
+# based on "`brew --prefix ruby`/bin" and "`gem environment gemdir`/bin"
+path=(/usr/local/opt/ruby/bin
+      /usr/local/lib/ruby/gems/3.3.0/bin
+      # /Volumes/dev/dart/flutter/bin
+      /Users/kevinrathbun/.pixi/bin
+      $HOME/.local/bin
+      $HOME/bin
+      $HOME/.emacs.d/bin
+      $path)
+
+eval "$(pixi completion --shell zsh)"
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
