@@ -39,8 +39,6 @@ zstyle ':completion:*' file-sort modification                                   
 
 zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}                       # NOT WORKING; tried: gdircolors -p > ~/.dircolors ; eval "$(gdircolors -b .dircolors)"
                                                                                     # sets $LS_COLORS, used by gnu coreutils 'ls --color=auto'
-alias ls="/usr/local/opt/coreutils/libexec/gnubin/ls --color=auto"                  # not pulling in all of gnu coreutils
-
 # https://unix.stackexchange.com/questions/6620/how-to-edit-command-line-in-full-screen-editor-in-zsh
 autoload -z edit-command-line
 zle -N edit-command-line
@@ -53,8 +51,10 @@ bindkey -M viins '^K' kill-line
 bindkey -M viins '^Y' yank
 bindkey -M viins '^[y' yank-pop
 
-
-[ -f ${ZDOTDIR}/.fzf.zsh ] && source ${ZDOTDIR}/.fzf.zsh
+# install fzf zsh key bindings
+if command -v fzf >/dev/null; then
+  source <(fzf --zsh)
+fi
 # Use fd instead of the default find command for listing path candidates.
 _fzf_compgen_path() {
   fd --hidden --follow --exclude ".git" . "$1"
@@ -73,7 +73,7 @@ export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 export BAT_THEME="ansi"
 alias cat=bat
-function xcat () { BAT_PAGER="less -RFKX" cat "$@" }  # -X prevents screen clear on exit, -F skips paging if output fits
+function xcat () { BAT_PAGER="less -RFKX" bat "$@" }  # -X prevents screen clear on exit, -F skips paging if output fits
 
 export LEDGER_FILE=/Volumes/budpowell/accounting/2024.journal
 
@@ -133,7 +133,7 @@ alias more="less -i"
 alias rm="rm -i"
 alias mv="mv -i"
 alias cp="cp -i"
-alias ls="ls -F"
+alias ls="gls --color=auto -F"   # gnu ls without pulling in all of gnubin
 alias la="ls -a"
 alias ll="ls -l"
 
@@ -157,17 +157,10 @@ setopt cdablevars       # autocd to named directories without '~'
 alias ds="dirs -v"
 alias pd=pushd
 alias pp=popd
-alias cd1="cd -1"
-alias cd2="cd -2"
-alias cd3="cd -3"
-alias cd4="cd -4"
-
-alias sls="screen -ls"
-alias sdr="screen -dr"
 
 alias diffy="diff -by --width=200"
 
-alias gdot='/usr/local/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+alias gdot='git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 alias gg="git grep"
 alias ggi="git grep -i"
 
@@ -178,36 +171,10 @@ if [ "$JAVA_HOME" = "" ]; then
     export JAVA_HOME
 fi
 
-# based on "`brew --prefix ruby`/bin" and "`gem environment gemdir`/bin"
-path=(/usr/local/opt/ruby/bin
-      /usr/local/lib/ruby/gems/3.3.0/bin
-      # /Volumes/dev/dart/flutter/bin
-      /Users/kevinrathbun/.pixi/bin
-      $HOME/.local/bin
+path=($HOME/.local/bin
       $HOME/bin
       $HOME/.emacs.d/bin
       $path)
-
-eval "$(pixi completion --shell zsh)"
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/Users/kevinrathbun/mambaforge/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/Users/kevinrathbun/mambaforge/etc/profile.d/conda.sh" ]; then
-        . "/Users/kevinrathbun/mambaforge/etc/profile.d/conda.sh"
-    else
-        export PATH="/Users/kevinrathbun/mambaforge/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-
-if [ -f "/Users/kevinrathbun/mambaforge/etc/profile.d/mamba.sh" ]; then
-    . "/Users/kevinrathbun/mambaforge/etc/profile.d/mamba.sh"
-fi
-# <<< conda initialize <<<
 
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm

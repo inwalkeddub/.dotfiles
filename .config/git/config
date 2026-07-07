@@ -1,9 +1,9 @@
 [user]
    name = "Kevin Rathbun "
-	email = 18218688+in-walked-kdog@users.noreply.github.com
+   email = 18218688+inwalkeddub@users.noreply.github.com
 
 [github]
-	user = in-walked-kdog
+	user = inwalkeddub
 
 [init]
 	defaultBranch = master
@@ -125,7 +125,7 @@
 	newHighlight = green bold 22
 [credential "https://github.com"]
 	helper = 
-	helper = !/usr/local/bin/gh auth git-credential
+	helper = !gh auth git-credential
 [credential "https://gist.github.com"]
 	helper = 
-	helper = !/usr/local/bin/gh auth git-credential
+	helper = !gh auth git-credential
