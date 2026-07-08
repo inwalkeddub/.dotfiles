@@ -4,7 +4,10 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-eval "$(/opt/homebrew/bin/brew shellenv)"   # prepends to path
+# prepends to path
+for brewpath in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+  [[ -x $brewpath ]] && eval "$($brewpath shellenv)" && break
+done
 
 source ${ZDOTDIR}/antigen.zsh
 
