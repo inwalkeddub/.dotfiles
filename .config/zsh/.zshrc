@@ -9,11 +9,13 @@ source ${ZDOTDIR}/antigen.zsh
 
 antigen bundle zsh-users/zsh-syntax-highlighting
 
-antigen theme romkatv/powerlevel10k  # also enables vi mode (bindkey -v) — add explicitly if removing p10k
+antigen theme romkatv/powerlevel10k
 
 antigen apply
 
 zmodload zsh/complist
+bindkey -v
+KEYTIMEOUT=1    # default is 0.4s pause
 bindkey -M menuselect 'h' vi-backward-char
 bindkey -M menuselect 'k' vi-up-line-or-history
 bindkey -M menuselect 'l' vi-forward-char
