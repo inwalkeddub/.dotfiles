@@ -41,10 +41,10 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-(setq doom-theme 'modus-vivendi)
+(setq doom-theme 'modus-vivendi-tinted)
 
 ;; start in fullscreen
-(add-hook 'window-setup-hook #'toggle-frame-fullscreen)
+;;(add-hook 'window-setup-hook #'toggle-frame-fullscreen)
 
 ;; add current workspace name and major mode icon
 (after! doom-modeline
@@ -183,6 +183,62 @@
 ;; JAVASCRIPT
 (setq-hook! 'rjsx-mode-hook +format-with-lsp nil) ; to use prettier
 
+;; PYTHON
+;; Use ruff for formatting + import sorting (replaces black + isort).
+;; ruff/ruff-isort are built-in apheleia formatters; the chain sorts then formats.
+(after! apheleia
+  (setf (alist-get 'python-mode    apheleia-mode-alist) '(ruff-isort ruff))
+  (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff-isort ruff)))
+
+;; SWIFT
+;; Apheleia ships no Swift entry, and Xcode's swift-format isn't on PATH —
+;; invoke it via the `swift format` driver subcommand ("-" = read stdin).
+(after! apheleia
+  (setf (alist-get 'swift-format apheleia-formatters)
+        '("swift" "format" "-"))
+  (setf (alist-get 'swift-mode    apheleia-mode-alist) 'swift-format)
+  (setf (alist-get 'swift-ts-mode apheleia-mode-alist) 'swift-format))
+
+;; JAVA
+;; google-java-format is deliberately zero-config: Google style (2-space) or
+;; --aosp (4-space), nothing else. Default stays Google; projects opt into the
+;; AOSP variant via .dir-locals.el: (apheleia-formatter . google-java-format-aosp)
+(after! apheleia
+  (setf (alist-get 'google-java-format-aosp apheleia-formatters)
+        '("google-java-format" "--aosp" "-")))
+
+;; Swift LSP: sourcekit-lsp ships in the Xcode toolchain but isn't on PATH —
+;; resolve it through xcrun (tracks the active toolchain, like `swift format`).
+(after! lsp-sourcekit
+  (setq lsp-sourcekit-executable
+        (string-trim (shell-command-to-string "xcrun --find sourcekit-lsp"))))
+
+;; Java LSP: use the nix-managed jdtls instead of lsp-java's self-download.
+;; Two quirks (verified against lsp-java source):
+;; 1. The client's presence test is lsp-java--locate-server-jar, which ONLY
+;;    checks install-dir/plugins/ for the Eclipse launcher jar and ignores the
+;;    native-command settings — so install-dir must point at the nix package's
+;;    Eclipse layout or the download prompt appears anyway.
+;; 2. The native command is searched in install-dir/bin, not PATH — so give
+;;    lsp-java-jdt-ls-command the absolute profile path.
+(after! lsp-java
+  (setq lsp-java-server-install-dir
+        (expand-file-name "~/.nix-profile/share/java/jdtls/")
+        lsp-java-jdt-ls-prefer-native-command t
+        lsp-java-jdt-ls-command (expand-file-name "~/.nix-profile/bin/jdtls")))
+
+;; Lua LSP: same disease as jdtls — lsp-lua's presence test f-exists?-checks its
+;; own install-dir paths, never PATH. Point bin + main.lua at the nix package
+;; (test passes), and set -command to the bare wrapper so lsp-lua doesn't
+;; append -E/main.lua args the nix wrapper already injects itself.
+(after! lsp-lua
+  (setq lsp-clients-lua-language-server-bin
+        (expand-file-name "~/.nix-profile/bin/lua-language-server")
+        lsp-clients-lua-language-server-main-location
+        (expand-file-name "~/.nix-profile/share/lua-language-server/main.lua")
+        lsp-clients-lua-language-server-command
+        (list (expand-file-name "~/.nix-profile/bin/lua-language-server"))))
+
 ;; ASTRO
 ;; (use-package! treesit-auto
 ;;   :custom
@@ -205,10 +261,10 @@
 ;;                        :source-dir "src")))
 ;;     (add-to-list 'treesit-auto-recipe-list astro-recipe)))
 
-(set-formatter! 'prettier-astro
-  '("npx" "prettier" "--parser=astro"
-    (apheleia-formatters-indent "--use-tabs" "--tab-width" 'astro-ts-mode-indent-offset))
-  :modes '(astro-ts-mode))
+; (set-formatter! 'prettier-astro
+;   '("npx" "prettier" "--parser=astro"
+;     (apheleia-formatters-indent "--use-tabs" "--tab-width" 'astro-ts-mode-indent-offset))
+;   :modes '(astro-ts-mode))
 
 (use-package! lsp-tailwindcss
   :when (modulep! +lsp)

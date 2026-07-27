@@ -6,3 +6,5 @@ a.out*
 .Trashes/
 .VolumeIcon.icns
 .fseventsd/
+
+**/.claude/settings.local.json

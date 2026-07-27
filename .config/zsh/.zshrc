@@ -1,8 +1,15 @@
+# direnv, part 1 (p10k FAQ): apply any pending env before instant prompt so
+# direnv output can't interfere with it; the hook itself is installed below.
+(( ${+commands[direnv]} )) && emulate zsh -c "$(direnv export zsh)"
+
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
+
+# direnv, part 2: the cd hook (direnv comes from the Nix profile, ~/.doom.d/tools)
+(( ${+commands[direnv]} )) && emulate zsh -c "$(direnv hook zsh)"
 
 # prepends to path
 for brewpath in /opt/homebrew/bin/brew /usr/local/bin/brew; do
@@ -47,9 +54,10 @@ zstyle ':completion:*' file-sort modification                                   
 zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}                       # NOT WORKING; tried: gdircolors -p > ~/.dircolors ; eval "$(gdircolors -b .dircolors)"
                                                                                     # sets $LS_COLORS, used by gnu coreutils 'ls --color=auto'
 # https://unix.stackexchange.com/questions/6620/how-to-edit-command-line-in-full-screen-editor-in-zsh
-autoload -z edit-command-line
-zle -N edit-command-line
-bindkey "^X^E" edit-command-line
+autoload -Uz edit-command-line      # marks function for lazy loading, -U skips alias expansion while loading, -z forces zsh-native semantics
+zle -N edit-command-line            # registers function as ZLE (Zsh Line Editor) widget, which keybindings are allowed to invoke
+bindkey "^X^E" edit-command-line    # maps the Ctrl-X Ctrl-E sequence to widget
+
 
 # Bash-style kill/yank in vi insert mode (kill ring carries text across keystrokes)
 # ^U cut-to-start, ^K cut-to-end, ^Y yank most recent, Alt-Y cycle older yanks
@@ -72,10 +80,10 @@ _fzf_compgen_dir() {
 }
 export FZF_DEFAULT_OPTS="--tmux right,70%,90%"
 export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix'
+# export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
 # --hidden to search dotfiles
 # --follow symbolic links
 # --exclude .git respects .gitignore
-# export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 
 export BAT_THEME="ansi"
@@ -134,6 +142,7 @@ function fkill () {
 
 fignore+=(.DS_Store)
 
+alias ec="emacsclient -t"
 alias his="history -20"
 alias more="less -i"
 
@@ -180,10 +189,13 @@ fi
 
 path=($HOME/.local/bin
       $HOME/bin
-      $HOME/.emacs.d/bin
+      $HOME/.config/emacs/bin
       $path)
 
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
 
 [[ ! -f "$ZDOTDIR"/.p10k.zsh ]] || source "$ZDOTDIR"/.p10k.zsh
+
+# auto-recompile this file to bytecode whenever it has changed since last compile
+[[ ! -e ${ZDOTDIR}/.zshrc.zwc || ${ZDOTDIR}/.zshrc -nt ${ZDOTDIR}/.zshrc.zwc ]] && zcompile ${ZDOTDIR}/.zshrc

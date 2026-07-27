@@ -62,8 +62,8 @@
 (package! keycast :pin "16d9961d15536054632be1eff75fd0fb1a4420f8")
 
 ;; https://edmundmiller.dev/posts/emacs-astro/
-(package! treesit-auto)
-(package! astro-ts-mode)
+; (package! treesit-auto)
+; (package! astro-ts-mode)
 
 (when (modulep! +lsp)
   (package! lsp-tailwindcss
