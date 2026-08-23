@@ -21,8 +21,13 @@ it here so every future output (any Claude, any surface) follows it.
   prior file. Same-day/same-topic collision → =-2= suffix or a more specific
   topic.
 - Every new =claude-*= file gets a link in =claude-snapshots.org= under
-  =* Session snapshots (dated)=, format
-  =- [[file:<filename>][<YYYY-MM-DD> — <Title>]]=, kept in date order.
+  =* Session snapshots (dated)=, kept in date order. The index is a *retrieval
+  aid*: each entry MUST carry a one-line hook so a future session can judge
+  relevance WITHOUT opening the file. Format:
+  =- [[file:<filename>][<YYYY-MM-DD> — <Title>]] :: <hook>=
+  The hook names the concrete searchable nouns in the doc — tools, filenames,
+  concepts, the decisions made (e.g. "gptel Anthropic backend; org link
+  durability; heading-vs-list") — not a restatement of the title. One line.
 - Kevin's own hand-authored topic files (=<topic>.org=; e.g. =claude.org= is
   his Claude *agenda*) are his — never restructure them.
 
