@@ -107,6 +107,7 @@ setopt hist_verify            # show command with history expansion at prompt be
 setopt extended_history       # record timestamp of command in HISTFILE
 setopt append_history         # append the new history to the old in histfile
 setopt inc_append_history_time # same but supports extended_history (set below)
+setopt share_history          # import other shells' new history each prompt (live cross-session search; merges up-arrow timeline)
 
 setopt no_beep
 setopt extended_glob        # enables ^ ~ negations et al chars for filename globbing
@@ -138,6 +139,32 @@ function fkill () {
           --header=$'Press CTRL-R to reload\n\n' --header-lines=2 \
           --preview='echo {}' --preview-window=down,3,wrap \
           --layout=reverse --height=80% | awk '{print $2}' | xargs kill -9
+}
+
+# keyset: store a secret in the macOS login keychain via hidden input, so it
+# never lands in shell history/scrollback. Refuses to overwrite with an empty
+# value (guards the `-w "$KEY"` footgun — recalling it with $KEY unset blanks
+# the stored key). Updates in place (-U).
+#   keyset <account> [service] [comment]      # service defaults to anthropic-api-key
+#   e.g.  keyset gptel                        # prompts hidden, stores, reports length
+keyset () {
+  emulate -L zsh
+  local account=$1 service=${2:-anthropic-api-key} comment=$3 secret
+  if [[ -z $account ]]; then
+    print -u2 "usage: keyset <account> [service] [comment]"; return 2
+  fi
+  read -s "secret?Secret for ${service}/${account}: "; print
+  if [[ -z $secret ]]; then
+    print -u2 "keyset: empty value — refusing to overwrite ${service}/${account}"; return 1
+  fi
+  local -a extra; [[ -n $comment ]] && extra=(-j "$comment")
+  if security add-generic-password -U -s "$service" -a "$account" \
+       -w "$secret" -D "application password" "${extra[@]}"; then
+    print "keyset: stored ${service}/${account} (${#secret} chars)"
+  else
+    print -u2 "keyset: failed to store ${service}/${account}"; secret=; return 1
+  fi
+  secret=
 }
 
 fignore+=(.DS_Store)
@@ -192,10 +219,11 @@ path=($HOME/.local/bin
       $HOME/.config/emacs/bin
       $path)
 
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-
 [[ ! -f "$ZDOTDIR"/.p10k.zsh ]] || source "$ZDOTDIR"/.p10k.zsh
 
-# auto-recompile this file to bytecode whenever it has changed since last compile
-[[ ! -e ${ZDOTDIR}/.zshrc.zwc || ${ZDOTDIR}/.zshrc -nt ${ZDOTDIR}/.zshrc.zwc ]] && zcompile ${ZDOTDIR}/.zshrc
+# auto-recompile this file to bytecode whenever it has changed since last compile.
+# Use `if` (not `… && …`): a short-circuited trailing `&&` returns exit 1 when the
+# .zwc is already current, which p10k's status segment then shows as a red error.
+if [[ ! -e ${ZDOTDIR}/.zshrc.zwc || ${ZDOTDIR}/.zshrc -nt ${ZDOTDIR}/.zshrc.zwc ]]; then
+  zcompile ${ZDOTDIR}/.zshrc
+fi

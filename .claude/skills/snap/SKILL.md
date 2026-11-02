@@ -17,10 +17,15 @@ Two ways in:
 Kevin liked a specific response and wants it in the eventual session snapshot
 **uncompressed, as delivered**.
 
-1. Immediately append the response **verbatim** (raw markdown) to
-   `snap-pending.md` in the session's scratchpad directory, preceded by a
-   separator line with a short slug (`--- <slug> ---`). Stashing now protects
-   the exact text from context compaction in long sessions.
+1. Immediately append the response **verbatim** (raw markdown) to the stash
+   file `~/Claude/snap-pending/<cwd-key>.md` (create the directory if needed),
+   preceded by a separator line with a short slug (`--- <slug> ---`).
+   `<cwd-key>` is the session's working directory with `/` replaced by `-`
+   (e.g. `/Users/kevinrathbun` → `-Users-kevinrathbun.md`). Stashing now
+   protects the exact text from context compaction in long sessions. The stash
+   is keyed by working directory, not session id, and lives outside `/tmp`,
+   because a resume can change the session id and withdraw the session
+   scratchpad (it did on 2026-10-10). Never use the scratchpad for it.
 2. Acknowledge briefly and carry on. Nothing touches `/Volumes/dev/org` until
    "snap session".
 
@@ -39,7 +44,8 @@ structure. Omit sections that are empty; do not pad.
    the work, compressed to their load-bearing facts. Include corrections of
    earlier misunderstandings ("X was overstated; actually Y").
 4. **As-is responses** — every response marked via "snap that as is", read
-   back from the scratchpad stash (`snap-pending.md`). Each gets its own
+   back from the stash file (`~/Claude/snap-pending/<cwd-key>.md`, see Mark
+   mode). Each gets its own
    subsection, transferred faithfully at the detail level originally
    delivered — markdown→org conversion only, **no compression**. If the stash
    is missing but marks happened, say so rather than reconstructing from
@@ -71,8 +77,8 @@ Target directory: **/Volumes/dev/org** (a git repo; Kevin's org knowledge base).
    tell him what was written so he can push.
 3. If `/Volumes/dev/org` is not mounted/available, do not write elsewhere
    silently — tell the user and ask where to save.
-4. **After writing, delete the scratchpad stash** (`snap-pending.md`) so the
-   next snapshot starts clean.
+4. **After writing, delete the stash file**
+   (`~/Claude/snap-pending/<cwd-key>.md`) so the next snapshot starts clean.
 
 ## Notes
 

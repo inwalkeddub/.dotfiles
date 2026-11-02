@@ -20,6 +20,8 @@ local apps = {
     l = "Mail",
     u = "Music",
     n = "Notes",
+    r = "Google Chrome",
+    d = "Finder",
 }
 for key, app in pairs(apps) do
     hyper:bind({}, key, function() hs.application.launchOrFocus(app) end)

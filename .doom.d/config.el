@@ -10,6 +10,11 @@
 (setq user-full-name "Kevin Rathbun"
       user-mail-address "kdrath@gmail.com")
 
+(load! "lisp/kr-text-tools")
+;; pick unused keys if you want to bind this
+;; (map! :leader
+;;       :desc "Sum first column" "m s" #'kr/sum-first-column)
+
 ;; Doom exposes five (optional) variables for controlling fonts in Doom:
 ;;
 ;; - `doom-font' -- the primary font to use
@@ -95,6 +100,32 @@
 (setq display-line-numbers-type 'relative)
 
 (setq org-directory "/Volumes/dev/org/")
+(setq org-agenda-files (list org-directory))
+(setq org-enforce-todo-dependencies t)   ; makes :ORDERED: actually bite
+(setq org-log-done 'time)                 ; timestamp on completion
+
+;; gptel: Anthropic backend; API key read from the macOS login keychain
+;; (stored via: security add-generic-password -s anthropic-api-key -a gptel -w <key>)
+;; Model set to current Sonnet (verified via /v1/models 2026-10-29); switch anytime via SPC o l.
+(after! gptel
+  (setq gptel-model 'claude-sonnet-5-5
+        gptel-backend (gptel-make-anthropic "Claude"
+                        :stream t
+                        ;; gptel's built-in list lags the API; register current models explicitly
+                        :models '(claude-sonnet-5-5 claude-opus-5-5 claude-haiku-5-5 claude-sonnet-4-6)
+                        :key (lambda ()
+                               (string-trim
+                                (shell-command-to-string
+                                 "security find-generic-password -w -s anthropic-api-key -a gptel"))))))
+
+;; so-long: when a file declares its own major mode (e.g. a "# -*- mode: org -*-"
+;; prop line, as my generated Claude transcript org files do), trust that mode
+;; and skip so-long entirely instead of merely "downgrading" it. The downgrade
+;; keeps the major mode but kills font-lock, flattening all org colors (headings,
+;; tool-use/result highlighting); `so-long-inhibit' keeps full fontification.
+;; Trade-off: a genuinely minified file opened with an explicit mode line would
+;; also skip so-long's speed guard — rare in practice.
+(setq so-long-file-local-mode-function 'so-long-inhibit)
 
 (setq initial-major-mode 'emacs-lisp-mode)
 

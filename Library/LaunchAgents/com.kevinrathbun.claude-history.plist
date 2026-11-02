@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.kevinrathbun.claude-history</string>
+
+  <!-- Render all ~/.claude/projects transcripts to org in /Volumes/dev/org.
+       build_all_history.py imports render_transcript.py from its own dir, so
+       no PYTHONPATH is needed (Python puts the script's dir on sys.path). -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>/Users/kevinrathbun/Claude/history/build_all_history.py</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/kevinrathbun/Claude/history</string>
+
+  <!-- 03:00 daily. If asleep at 3am, launchd runs it at the next wake. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>3</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/kevinrathbun/.local/state/claude-history/build.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/kevinrathbun/.local/state/claude-history/build.log</string>
+</dict>
+</plist>
